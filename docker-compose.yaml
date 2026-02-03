@@ -1,0 +1,29 @@
+name: "oracle poc"
+
+services:
+  db:
+    image: gvenzl/oracle-xe:18
+    container_name: db
+    ports:
+      - "1521:1521"       # SQL*Net
+      - "5500:5500"       # EM Express (optional)
+    environment:
+      ORACLE_PASSWORD: "foo"
+      ORACLE_ENABLE_CDB: "true"
+    volumes:
+      - ./oracle:/opt/oracle/oradata
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'SELECT 1 FROM dual;' | sqlplus -s system/Oracle123@XE"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  sqlcl:
+    image: krisrice/sqlcl:latest
+    volumes:
+      - ./src:/src
+      - ./utPLSQL:/utplsql
+    depends_on:
+      - db
+
